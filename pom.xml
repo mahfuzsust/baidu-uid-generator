@@ -6,6 +6,14 @@
     <name>UID-Generator</name>
     <description>An unique id generator</description>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/mahfuz/baidu-uid-generator</url>
+        </repository>
+    </distributionManagement>
+
     <groupId>com.baidu.fsg</groupId>
     <artifactId>uid-generator</artifactId>
     <version>1.0.0-SNAPSHOT</version>
