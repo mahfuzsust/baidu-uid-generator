@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 
 import com.baidu.fsg.uid.utils.PaddedAtomicLong;
 
@@ -86,9 +85,9 @@ public class RingBuffer {
      */
     public RingBuffer(int bufferSize, int paddingFactor) {
         // check buffer size is positive & a power of 2; padding factor in (0, 100)
-        Assert.isTrue(bufferSize > 0L, "RingBuffer size must be positive");
-        Assert.isTrue(Integer.bitCount(bufferSize) == 1, "RingBuffer size must be a power of 2");
-        Assert.isTrue(paddingFactor > 0 && paddingFactor < 100, "RingBuffer size must be positive");
+        assert bufferSize > 0L : "RingBuffer size must be positive";
+        assert Integer.bitCount(bufferSize) == 1 : "RingBuffer size must be a power of 2";
+        assert paddingFactor > 0 && paddingFactor < 100: "RingBuffer size must be positive";
 
         this.bufferSize = bufferSize;
         this.indexMask = bufferSize - 1;
@@ -105,7 +104,6 @@ public class RingBuffer {
      * <b>Note that: </b> It is recommended to put UID in a serialize way, cause we once batch generate a series UIDs and put
      * the one by one into the buffer, so it is unnecessary put in multi-threads
      *
-     * @param uid
      * @return false means that the buffer is full, apply {@link RejectedPutBufferHandler}
      */
     public synchronized boolean put(long uid) {
@@ -154,7 +152,7 @@ public class RingBuffer {
         long nextCursor = cursor.updateAndGet(old -> old == tail.get() ? old : old + 1);
 
         // check for safety consideration, it never occurs
-        Assert.isTrue(nextCursor >= currentCursor, "Curosr can't move back");
+        assert nextCursor >= currentCursor : "Curosr can't move back";
 
         // trigger padding in an async-mode if reach the threshold
         long currentTail = tail.get();
@@ -171,7 +169,7 @@ public class RingBuffer {
 
         // 1. check next slot flag is CAN_TAKE_FLAG
         int nextCursorIndex = calSlotIndex(nextCursor);
-        Assert.isTrue(flags[nextCursorIndex].get() == CAN_TAKE_FLAG, "Curosr not in can take status");
+        assert flags[nextCursorIndex].get() == CAN_TAKE_FLAG : "Cursor not in can take status";
 
         // 2. get UID from next slot
         // 3. set next slot flag as CAN_PUT_FLAG.
@@ -249,13 +247,10 @@ public class RingBuffer {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("RingBuffer [bufferSize=").append(bufferSize)
-               .append(", tail=").append(tail)
-               .append(", cursor=").append(cursor)
-               .append(", paddingThreshold=").append(paddingThreshold).append("]");
-        
-        return builder.toString();
+        return "RingBuffer [bufferSize=" + bufferSize +
+                ", tail=" + tail +
+                ", cursor=" + cursor +
+                ", paddingThreshold=" + paddingThreshold + "]";
     }
 
 }

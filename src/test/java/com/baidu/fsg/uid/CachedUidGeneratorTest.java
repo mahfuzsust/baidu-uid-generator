@@ -4,12 +4,7 @@ import com.baidu.fsg.uid.impl.CachedUidGenerator;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -22,23 +17,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * @author yutianbao
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:uid/cached-uid-spring.xml" })
 public class CachedUidGeneratorTest {
     private static final int SIZE = 7000000; // 700w
     private static final boolean VERBOSE = false;
     private static final int THREADS = Runtime.getRuntime().availableProcessors() << 1;
 
-    @Resource
     private UidGenerator uidGenerator;
 
     /**
      * Test for serially generate
-     * 
-     * @throws IOException
+     *
      */
     @Test
-    public void testSerialGenerate() throws IOException {
+    public void testSerialGenerate() {
         // Generate UID serially
         Set<Long> uidSet = new HashSet<>(SIZE);
         for (int i = 0; i < SIZE; i++) {
@@ -51,12 +42,10 @@ public class CachedUidGeneratorTest {
 
     /**
      * Test for parallel generate
-     * 
-     * @throws InterruptedException
-     * @throws IOException
+     *
      */
     @Test
-    public void testParallelGenerate() throws InterruptedException, IOException {
+    public void testParallelGenerate() throws InterruptedException {
         AtomicInteger control = new AtomicInteger(-1);
         Set<Long> uidSet = new ConcurrentSkipListSet<>();
 
@@ -119,7 +108,7 @@ public class CachedUidGeneratorTest {
     /**
      * Check UIDs are all unique
      */
-    private void checkUniqueID(Set<Long> uidSet) throws IOException {
+    private void checkUniqueID(Set<Long> uidSet) {
         System.out.println(uidSet.size());
         Assert.assertEquals(SIZE, uidSet.size());
     }

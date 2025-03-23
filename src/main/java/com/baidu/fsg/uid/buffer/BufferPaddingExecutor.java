@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 
 import com.baidu.fsg.uid.utils.NamingThreadFactory;
 import com.baidu.fsg.uid.utils.PaddedAtomicLong;
@@ -76,7 +75,6 @@ public class BufferPaddingExecutor {
      *
      * @param ringBuffer {@link RingBuffer}
      * @param uidProvider {@link BufferedUidProvider}
-     * @param usingSchedule
      */
     public BufferPaddingExecutor(RingBuffer ringBuffer, BufferedUidProvider uidProvider, boolean usingSchedule) {
         this.running = new AtomicBoolean(false);
@@ -101,7 +99,7 @@ public class BufferPaddingExecutor {
      */
     public void start() {
         if (bufferPadSchedule != null) {
-            bufferPadSchedule.scheduleWithFixedDelay(() -> paddingBuffer(), scheduleInterval, scheduleInterval, TimeUnit.SECONDS);
+            bufferPadSchedule.scheduleWithFixedDelay(this::paddingBuffer, scheduleInterval, scheduleInterval, TimeUnit.SECONDS);
         }
     }
 
@@ -121,7 +119,6 @@ public class BufferPaddingExecutor {
     /**
      * Whether is padding
      *
-     * @return
      */
     public boolean isRunning() {
         return running.get();
@@ -167,7 +164,7 @@ public class BufferPaddingExecutor {
      * Setters
      */
     public void setScheduleInterval(long scheduleInterval) {
-        Assert.isTrue(scheduleInterval > 0, "Schedule interval must positive!");
+        assert scheduleInterval > 0: "Schedule interval must positive!";
         this.scheduleInterval = scheduleInterval;
     }
     

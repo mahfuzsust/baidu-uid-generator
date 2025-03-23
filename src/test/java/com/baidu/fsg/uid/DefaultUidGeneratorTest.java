@@ -7,14 +7,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Resource;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.baidu.fsg.uid.impl.DefaultUidGenerator;
 
@@ -23,14 +19,11 @@ import com.baidu.fsg.uid.impl.DefaultUidGenerator;
  * 
  * @author yutianbao
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:uid/default-uid-spring.xml" })
 public class DefaultUidGeneratorTest {
     private static final int SIZE = 100000; // 10w
     private static final boolean VERBOSE = true;
     private static final int THREADS = Runtime.getRuntime().availableProcessors() << 1;
 
-    @Resource
     private UidGenerator uidGenerator;
 
     /**
@@ -50,8 +43,7 @@ public class DefaultUidGeneratorTest {
 
     /**
      * Test for parallel generate
-     * 
-     * @throws InterruptedException
+     *
      */
     @Test
     public void testParallelGenerate() throws InterruptedException {

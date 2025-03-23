@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.util.Assert;
 
 import com.baidu.fsg.uid.BitsAllocator;
 import com.baidu.fsg.uid.UidGenerator;
@@ -48,13 +46,13 @@ import com.baidu.fsg.uid.exception.UidGenerateException;
  * 
  * @author yutianbao
  */
-public class CachedUidGenerator extends DefaultUidGenerator implements DisposableBean {
+public class CachedUidGenerator extends DefaultUidGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(CachedUidGenerator.class);
     private static final int DEFAULT_BOOST_POWER = 3;
 
     /** Spring properties */
     private int boostPower = DEFAULT_BOOST_POWER;
-    private int paddingFactor = RingBuffer.DEFAULT_PADDING_PERCENT;
+    private final int paddingFactor = RingBuffer.DEFAULT_PADDING_PERCENT;
     private Long scheduleInterval;
     
     private RejectedPutBufferHandler rejectedPutBufferHandler;
@@ -89,15 +87,13 @@ public class CachedUidGenerator extends DefaultUidGenerator implements Disposabl
         return super.parseUID(uid);
     }
     
-    @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         bufferPaddingExecutor.shutdown();
     }
 
     /**
      * Get the UIDs in the same specified second under the max sequence
      * 
-     * @param currentSecond
      * @return UID list, size of {@link BitsAllocator#getMaxSequence()} + 1
      */
     protected List<Long> nextIdsForOneSecond(long currentSecond) {
@@ -152,22 +148,22 @@ public class CachedUidGenerator extends DefaultUidGenerator implements Disposabl
      * Setters for spring property
      */
     public void setBoostPower(int boostPower) {
-        Assert.isTrue(boostPower > 0, "Boost power must be positive!");
+        assert boostPower > 0 : "boostPower must be positive!";
         this.boostPower = boostPower;
     }
     
     public void setRejectedPutBufferHandler(RejectedPutBufferHandler rejectedPutBufferHandler) {
-        Assert.notNull(rejectedPutBufferHandler, "RejectedPutBufferHandler can't be null!");
+        assert rejectedPutBufferHandler != null : "RejectedPutBufferHandler can not be null";
         this.rejectedPutBufferHandler = rejectedPutBufferHandler;
     }
 
     public void setRejectedTakeBufferHandler(RejectedTakeBufferHandler rejectedTakeBufferHandler) {
-        Assert.notNull(rejectedTakeBufferHandler, "RejectedTakeBufferHandler can't be null!");
+        assert rejectedTakeBufferHandler != null : "RejectedTakeBufferHandler can't be null!";
         this.rejectedTakeBufferHandler = rejectedTakeBufferHandler;
     }
 
     public void setScheduleInterval(long scheduleInterval) {
-        Assert.isTrue(scheduleInterval > 0, "Schedule interval must positive!");
+        assert scheduleInterval > 0 : "Schedule interval must positive!";
         this.scheduleInterval = scheduleInterval;
     }
 
