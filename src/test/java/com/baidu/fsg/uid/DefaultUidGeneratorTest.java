@@ -107,17 +107,12 @@ public class DefaultUidGeneratorTest {
         // Check UID is positive, and can be parsed
         assertTrue(uid > 0L);
         assertTrue(StringUtils.isNotBlank(parsedInfo));
-
-        if (VERBOSE) {
-            System.out.println(Thread.currentThread().getName() + " No." + index + " >>> " + parsedInfo);
-        }
     }
 
     /**
      * Check UIDs are all unique
      */
     private void checkUniqueID(Set<Long> uidSet) {
-        System.out.println(uidSet.size());
         assertEquals(SIZE, uidSet.size());
     }
 
