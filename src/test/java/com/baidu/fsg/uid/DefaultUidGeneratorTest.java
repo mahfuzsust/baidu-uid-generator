@@ -8,11 +8,15 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
+import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
 
 import com.baidu.fsg.uid.impl.DefaultUidGenerator;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test for {@link DefaultUidGenerator}
@@ -24,8 +28,14 @@ public class DefaultUidGeneratorTest {
     private static final boolean VERBOSE = true;
     private static final int THREADS = Runtime.getRuntime().availableProcessors() << 1;
 
-    private UidGenerator uidGenerator;
+    private static DefaultUidGenerator uidGenerator;
 
+    @BeforeAll
+    static void setUp() throws Exception {
+        uidGenerator = new DefaultUidGenerator();
+        uidGenerator.setWorkerIdAssigner(new DisposableWorkerIdAssigner());
+        uidGenerator.afterPropertiesSet();
+    }
     /**
      * Test for serially generate
      */
@@ -66,7 +76,7 @@ public class DefaultUidGeneratorTest {
         }
 
         // Check generate 10w times
-        Assert.assertEquals(SIZE, control.get());
+        assertEquals(SIZE, control.get());
 
         // Check UIDs are all unique
         checkUniqueID(uidSet);
@@ -95,8 +105,8 @@ public class DefaultUidGeneratorTest {
         uidSet.add(uid);
 
         // Check UID is positive, and can be parsed
-        Assert.assertTrue(uid > 0L);
-        Assert.assertTrue(StringUtils.isNotBlank(parsedInfo));
+        assertTrue(uid > 0L);
+        assertTrue(StringUtils.isNotBlank(parsedInfo));
 
         if (VERBOSE) {
             System.out.println(Thread.currentThread().getName() + " No." + index + " >>> " + parsedInfo);
@@ -108,7 +118,7 @@ public class DefaultUidGeneratorTest {
      */
     private void checkUniqueID(Set<Long> uidSet) {
         System.out.println(uidSet.size());
-        Assert.assertEquals(SIZE, uidSet.size());
+        assertEquals(SIZE, uidSet.size());
     }
 
 }

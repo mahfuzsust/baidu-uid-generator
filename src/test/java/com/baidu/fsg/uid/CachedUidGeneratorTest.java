@@ -1,9 +1,10 @@
 package com.baidu.fsg.uid;
 
 import com.baidu.fsg.uid.impl.CachedUidGenerator;
+import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,6 +12,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test for {@link CachedUidGenerator}
@@ -22,7 +26,14 @@ public class CachedUidGeneratorTest {
     private static final boolean VERBOSE = false;
     private static final int THREADS = Runtime.getRuntime().availableProcessors() << 1;
 
-    private UidGenerator uidGenerator;
+    private static CachedUidGenerator uidGenerator;
+
+    @BeforeAll
+    static void setUp() throws Exception {
+        uidGenerator = new CachedUidGenerator();
+        uidGenerator.setWorkerIdAssigner(new DisposableWorkerIdAssigner());
+        uidGenerator.afterPropertiesSet();
+    }
 
     /**
      * Test for serially generate
@@ -65,7 +76,7 @@ public class CachedUidGeneratorTest {
         }
 
         // Check generate 700w times
-        Assert.assertEquals(SIZE, control.get());
+        assertEquals(SIZE, control.get());
 
         // Check UIDs are all unique
         checkUniqueID(uidSet);
@@ -85,9 +96,6 @@ public class CachedUidGeneratorTest {
         }
     }
 
-    /**
-     * Do generating
-     */
     private void doGenerate(Set<Long> uidSet, int index) {
         long uid = uidGenerator.getUID();
         String parsedInfo = uidGenerator.parseUID(uid);
@@ -97,8 +105,9 @@ public class CachedUidGeneratorTest {
         }
 
         // Check UID is positive, and can be parsed
-        Assert.assertTrue(uid > 0L);
-        Assert.assertTrue(StringUtils.isNotBlank(parsedInfo));
+
+        assertTrue(uid > 0L);
+        assertTrue(StringUtils.isNotBlank(parsedInfo));
 
         if (VERBOSE) {
             System.out.println(Thread.currentThread().getName() + " No." + index + " >>> " + parsedInfo);
@@ -109,8 +118,7 @@ public class CachedUidGeneratorTest {
      * Check UIDs are all unique
      */
     private void checkUniqueID(Set<Long> uidSet) {
-        System.out.println(uidSet.size());
-        Assert.assertEquals(SIZE, uidSet.size());
+        assertEquals(SIZE, uidSet.size());
     }
 
 }
