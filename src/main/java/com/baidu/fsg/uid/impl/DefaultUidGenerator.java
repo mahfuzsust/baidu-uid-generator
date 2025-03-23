@@ -18,6 +18,7 @@ package com.baidu.fsg.uid.impl;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,8 +80,10 @@ public class DefaultUidGenerator implements UidGenerator {
 
     protected WorkerIdAssigner workerIdAssigner;
 
-    public DefaultUidGenerator() {
+    public DefaultUidGenerator() throws Exception {
         setEpochStr("2024-01-01");
+        workerIdAssigner = new DisposableWorkerIdAssigner();
+        this.afterPropertiesSet();
     }
 
     public void afterPropertiesSet() throws Exception {

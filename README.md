@@ -1,7 +1,5 @@
 UidGenerator
 ==========================
-[In Chinese 中文版](README.zh_cn.md)
-
 UidGenerator is a Java implemented, [Snowflake](https://github.com/twitter/snowflake) based unique ID generator. It
 works as a component, and allows users to override workId bits and initialization strategy. As a result, it is much more
 suitable for virtualization environment, such as [docker](https://www.docker.com/). Besides these, it overcomes
@@ -32,7 +30,7 @@ it is a 64 bits number(long), and the default bits of that three fields are as f
 * sequence (13 bits)   
   the last 13 bits, represents sequence within the one second, maximum is 8192 per second by default.
   
-**The parameters above can be configured in spring bean**
+**The parameters above can be configured**
 
 
 CachedUidGenerator
@@ -69,189 +67,28 @@ effect of 「False Sharing」, in order to solve it, cache line padding is appli
   
 * In-time filling
   Whenever the percent of available UIDs is less than threshold ```paddingFactor```, the fill task is triggered. You can
-  reassign that  threshold in Spring bean configuration.
+  reassign that  threshold using configuration.
   
 * Periodic filling
-  Filling periodically in a scheduled thread. The```scheduleInterval``` can be reassigned in Spring bean configuration.
+  Filling periodically in a scheduled thread. The```scheduleInterval``` can be reassigned in configuration.
 
 
 Quick Start
 ------------
-Here we have a demo with 4 steps to introduce how to integrate UidGenerator into Spring based projects.<br/>
-
-### Step 1: Install Java8, Maven, MySQL
-If you have already installed maven, jdk8+ and Mysql or other DB which supported by Mybatis, just skip to next.<br/>
-Download [Java8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html),
-[MySQL](https://dev.mysql.com/downloads/mysql/) and [Maven](https://maven.apache.org/download.cgi),
-and install jdk, mysql. For maven, extracting and setting MAVEN_HOME is enough.
-
-#### Set JAVA_HOME & MAVEN_HOME
-Here is a sample script to set JAVA_HOME and MAVEN_HOME
-```shell
-export MAVEN_HOME=/xxx/xxx/software/maven/apache-maven-3.3.9
-export PATH=$MAVEN_HOME/bin:$PATH
-JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home";
-export JAVA_HOME;
-```
-
-### Step 2: Create table WORKER_NODE
-Replace ```xxxxx``` with real database name, and run following script to create table,
-```sql
-DROP DATABASE IF EXISTS `xxxx`;
-CREATE DATABASE `xxxx` ;
-use `xxxx`;
-DROP TABLE IF EXISTS WORKER_NODE;
-CREATE TABLE WORKER_NODE
-(
-ID BIGINT NOT NULL AUTO_INCREMENT COMMENT 'auto increment id',
-HOST_NAME VARCHAR(64) NOT NULL COMMENT 'host name',
-PORT VARCHAR(64) NOT NULL COMMENT 'port',
-TYPE INT NOT NULL COMMENT 'node type: ACTUAL or CONTAINER',
-LAUNCH_DATE DATE NOT NULL COMMENT 'launch date',
-MODIFIED TIMESTAMP NOT NULL COMMENT 'modified time',
-CREATED TIMESTAMP NOT NULL COMMENT 'created time',
-PRIMARY KEY(ID)
-)
- COMMENT='DB WorkerID Assigner for UID Generator',ENGINE = INNODB;
-```
-
-Reset property of 'jdbc.url', 'jdbc.username' and 'jdbc.password' in [mysql.properties](src/test/resources/uid/mysql.properties).
-
-### Step 3: Spring configuration
-#### DefaultUidGenerator
-There are two implements of UidGenerator: [DefaultUidGenerator](src/main/java/com/baidu/fsg/uid/impl/DefaultUidGenerator.java), [CachedUidGenerator](src/main/java/com/baidu/fsg/uid/impl/CachedUidGenerator.java).<br/>
-For performance sensitive application, CachedUidGenerator is recommended.
-
-```xml
-<!-- DefaultUidGenerator -->
-<bean id="defaultUidGenerator" class="com.baidu.fsg.uid.impl.DefaultUidGenerator" lazy-init="false">
-    <property name="workerIdAssigner" ref="disposableWorkerIdAssigner"/>
-
-    <!-- Specified bits & epoch as your demand. No specified the default value will be used -->
-    <property name="timeBits" value="29"/>
-    <property name="workerBits" value="21"/>
-    <property name="seqBits" value="13"/>
-    <property name="epochStr" value="2016-09-20"/>
-</bean>
- 
-<!-- Disposable WorkerIdAssigner based on Database -->
-<bean id="disposableWorkerIdAssigner" class="com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner" />
-
-```
-
-#### CachedUidGenerator
-Copy beans of CachedUidGenerator to 'test/resources/uid/cached-uid-spring.xml'.
-```xml
-<!-- CachedUidGenerator -->
-<bean id="cachedUidGenerator" class="com.baidu.fsg.uid.impl.CachedUidGenerator">
-    <property name="workerIdAssigner" ref="disposableWorkerIdAssigner" />
- 
-    <!-- The config below is option -->
-    <!-- Specified bits & epoch as your demand. No specified the default value will be used -->
-    <property name="timeBits" value="29"/>
-    <property name="workerBits" value="21"/>
-    <property name="seqBits" value="13"/>
-    <property name="epochStr" value="2016-09-20"/>
-    <!-- RingBuffer size, to improve the throughput. -->
-    <!-- Default as 3. Sample: original bufferSize=8192, after boosting the new bufferSize= 8192 << 3 = 65536 -->
-    <property name="boostPower" value="3"></property>
- 
-    <!-- In-time padding, available UIDs percentage(0, 100) of the RingBuffer, default as 50 -->
-    <!-- Sample: bufferSize=1024, paddingFactor=50 -> threshold=1024 * 50 / 100 = 512. -->
-    <!-- When the rest available UIDs < 512, RingBiffer will be padded in-time -->
-    <property name="paddingFactor" value="50"></property>
- 
-    <!-- Periodic padding -->
-    <!-- Default is disabled. Enable as below, scheduleInterval unit as Seconds. -->
-    <property name="scheduleInterval" value="60"></property>
- 
-    <!-- Policy for rejecting put on RingBuffer -->
-    <property name="rejectedPutBufferHandler" ref="XxxxYourPutRejectPolicy"></property>
- 
-    <!-- Policy for rejecting take from RingBuffer -->
-    <property name="rejectedTakeBufferHandler" ref="XxxxYourTakeRejectPolicy"></property>
- 
-</bean>
- 
-<!-- Disposable WorkerIdAssigner based on Database -->
-<bean id="disposableWorkerIdAssigner" class="com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner" />
- 
-<!-- Mybatis config... -->
-```
-
-#### Mybatis config
-[mybatis-spring.xml](src/test/resources/uid/mybatis-spring.xml) shows as below:
-```xml
-<!-- Spring annotation scan -->
-<context:component-scan base-package="com.baidu.fsg.uid" />
-
-<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-    <property name="dataSource" ref="dataSource" />
-    <property name="mapperLocations" value="classpath:/META-INF/mybatis/mapper/M_WORKER*.xml" />
-</bean>
-
-<!-- transaction -->
-<tx:annotation-driven transaction-manager="transactionManager" order="1" />
-
-<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-	<property name="dataSource" ref="dataSource" />
-</bean>
-
-<!-- Mybatis Mapper scan -->
-<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-	<property name="annotationClass" value="org.springframework.stereotype.Repository" />
-	<property name="basePackage" value="com.baidu.fsg.uid.worker.dao" />
-	<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
-</bean>
-
-<!-- datasource config -->
-<bean id="dataSource" parent="abstractDataSource">
-	<property name="driverClassName" value="${mysql.driver}" />
-	<property name="maxActive" value="${jdbc.maxActive}" />
-	<property name="url" value="${jdbc.url}" />
-	<property name="username" value="${jdbc.username}" />
-	<property name="password" value="${jdbc.password}" />
-</bean>
-
-<bean id="abstractDataSource" class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close">
-	<property name="filters" value="${datasource.filters}" />
-	<property name="defaultAutoCommit" value="${datasource.defaultAutoCommit}" />
-	<property name="initialSize" value="${datasource.initialSize}" />
-	<property name="minIdle" value="${datasource.minIdle}" />
-	<property name="maxWait" value="${datasource.maxWait}" />
-	<property name="testWhileIdle" value="${datasource.testWhileIdle}" />
-	<property name="testOnBorrow" value="${datasource.testOnBorrow}" />
-	<property name="testOnReturn" value="${datasource.testOnReturn}" />
-	<property name="validationQuery" value="${datasource.validationQuery}" />
-	<property name="timeBetweenEvictionRunsMillis" value="${datasource.timeBetweenEvictionRunsMillis}" />
-	<property name="minEvictableIdleTimeMillis" value="${datasource.minEvictableIdleTimeMillis}" />
-	<property name="logAbandoned" value="${datasource.logAbandoned}" />
-	<property name="removeAbandoned" value="${datasource.removeAbandoned}" />
-	<property name="removeAbandonedTimeout" value="${datasource.removeAbandonedTimeout}" />
-</bean>
-
-<bean id="batchSqlSession" class="org.mybatis.spring.SqlSessionTemplate">
-	<constructor-arg index="0" ref="sqlSessionFactory" />
-	<constructor-arg index="1" value="BATCH" />
-</bean>
-```
-
-### Step 4: Run UnitTest
-Run [CachedUidGeneratorTest](src/test/java/com/baidu/fsg/uid/CachedUidGeneratorTest.java), shows how to generate / parse UniqueID:
+### Add dependency - [JitPack](https://jitpack.io/#mahfuzsust/baidu-uid-generator)
+### Example 
 ```java
-@Resource
-private UidGenerator uidGenerator;
+// Default
+DefaultUidGenerator generator = new DefaultUidGenerator();
+long uid = generator.getUID();
 
-@Test
-public void testSerialGenerate() {
-    // Generate UID
-    long uid = uidGenerator.getUID();
+// Cached generator
+CachedUidGenerator generator = new CachedUidGenerator();
+long uid = generator.getUID();
 
-    // Parse UID into [Timestamp, WorkerId, Sequence]
-    // {"UID":"180363646902239241","parsed":{    "timestamp":"2017-01-19 12:15:46",    "workerId":"4",    "sequence":"9"        }}
-    System.out.println(uidGenerator.parseUID(uid));
+// Parse Uid
+String parsedInfo = generator.parseUID(uid);
 
-}
 ```
 
 ### Tips

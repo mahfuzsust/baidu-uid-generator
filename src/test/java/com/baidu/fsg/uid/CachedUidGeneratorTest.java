@@ -1,7 +1,6 @@
 package com.baidu.fsg.uid;
 
 import com.baidu.fsg.uid.impl.CachedUidGenerator;
-import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import org.apache.commons.lang.StringUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class CachedUidGeneratorTest {
     private static final int SIZE = 7000000; // 700w
-    private static final boolean VERBOSE = false;
     private static final int THREADS = Runtime.getRuntime().availableProcessors() << 1;
 
     private static CachedUidGenerator uidGenerator;
@@ -31,8 +29,6 @@ public class CachedUidGeneratorTest {
     @BeforeAll
     static void setUp() throws Exception {
         uidGenerator = new CachedUidGenerator();
-        uidGenerator.setWorkerIdAssigner(new DisposableWorkerIdAssigner());
-        uidGenerator.afterPropertiesSet();
     }
 
     /**
