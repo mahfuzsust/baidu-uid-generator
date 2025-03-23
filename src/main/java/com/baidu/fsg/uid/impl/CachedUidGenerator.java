@@ -52,7 +52,6 @@ public class CachedUidGenerator extends DefaultUidGenerator {
 
     /** Spring properties */
     private int boostPower = DEFAULT_BOOST_POWER;
-    private final int paddingFactor = RingBuffer.DEFAULT_PADDING_PERCENT;
     private Long scheduleInterval;
     
     private RejectedPutBufferHandler rejectedPutBufferHandler;
@@ -61,6 +60,10 @@ public class CachedUidGenerator extends DefaultUidGenerator {
     /** RingBuffer */
     private RingBuffer ringBuffer;
     private BufferPaddingExecutor bufferPaddingExecutor;
+
+    public CachedUidGenerator() throws Exception {
+        super();
+    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -116,6 +119,7 @@ public class CachedUidGenerator extends DefaultUidGenerator {
     private void initRingBuffer() {
         // initialize RingBuffer
         int bufferSize = ((int) bitsAllocator.getMaxSequence() + 1) << boostPower;
+        int paddingFactor = RingBuffer.DEFAULT_PADDING_PERCENT;
         this.ringBuffer = new RingBuffer(bufferSize, paddingFactor);
         LOGGER.info("Initialized ring buffer size:{}, paddingFactor:{}", bufferSize, paddingFactor);
 

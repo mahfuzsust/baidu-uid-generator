@@ -7,8 +7,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
-import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
 import org.apache.commons.lang.StringUtils;
 
 import com.baidu.fsg.uid.impl.DefaultUidGenerator;
@@ -25,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class DefaultUidGeneratorTest {
     private static final int SIZE = 100000; // 10w
-    private static final boolean VERBOSE = true;
     private static final int THREADS = Runtime.getRuntime().availableProcessors() << 1;
 
     private static DefaultUidGenerator uidGenerator;
@@ -33,8 +30,6 @@ public class DefaultUidGeneratorTest {
     @BeforeAll
     static void setUp() throws Exception {
         uidGenerator = new DefaultUidGenerator();
-        uidGenerator.setWorkerIdAssigner(new DisposableWorkerIdAssigner());
-        uidGenerator.afterPropertiesSet();
     }
     /**
      * Test for serially generate
