@@ -17,7 +17,6 @@ package com.baidu.fsg.uid;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
-import org.springframework.util.Assert;
 
 /**
  * Allocate 64 bits for the UID(long)<br>
@@ -34,7 +33,7 @@ public class BitsAllocator {
     /**
      * Bits for [sign-> second-> workId-> sequence]
      */
-    private int signBits = 1;
+    private final int signBits = 1;
     private final int timestampBits;
     private final int workerIdBits;
     private final int sequenceBits;
@@ -59,7 +58,7 @@ public class BitsAllocator {
     public BitsAllocator(int timestampBits, int workerIdBits, int sequenceBits) {
         // make sure allocated 64 bits
         int allocateTotalBits = signBits + timestampBits + workerIdBits + sequenceBits;
-        Assert.isTrue(allocateTotalBits == TOTAL_BITS, "allocate not enough 64 bits");
+        assert allocateTotalBits == TOTAL_BITS : "allocate not enough 64 bits";
 
         // initialize bits
         this.timestampBits = timestampBits;
@@ -79,11 +78,7 @@ public class BitsAllocator {
     /**
      * Allocate bits for UID according to delta seconds & workerId & sequence<br>
      * <b>Note that: </b>The highest bit will always be 0 for sign
-     * 
-     * @param deltaSeconds
-     * @param workerId
-     * @param sequence
-     * @return
+     *
      */
     public long allocate(long deltaSeconds, long workerId, long sequence) {
         return (deltaSeconds << timestampShift) | (workerId << workerIdShift) | sequence;

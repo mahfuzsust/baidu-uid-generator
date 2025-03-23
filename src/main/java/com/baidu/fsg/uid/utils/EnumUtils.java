@@ -15,8 +15,6 @@
  */
 package com.baidu.fsg.uid.utils;
 
-import org.springframework.util.Assert;
-
 /**
  * EnumUtils provides the operations for {@link ValuedEnum} such as Parse, value of...
  * 
@@ -26,13 +24,10 @@ public abstract class EnumUtils {
 
     /**
      * Parse the bounded value into ValuedEnum
-     * 
-     * @param clz
-     * @param value
-     * @return
+     *
      */
     public static <T extends ValuedEnum<V>, V> T parse(Class<T> clz, V value) {
-        Assert.notNull(clz, "clz can not be null");
+        assert clz != null : "clz can not be null";
         if (value == null) {
             return null;
         }
@@ -47,11 +42,7 @@ public abstract class EnumUtils {
 
     /**
      * Null-safe valueOf function
-     * 
-     * @param <T>
-     * @param enumType
-     * @param name
-     * @return
+     *
      */
     public static <T extends Enum<T>> T valueOf(Class<T> enumType, String name) {
         if (name == null) {
