@@ -77,8 +77,11 @@ public class DefaultUidGenerator implements UidGenerator {
     protected long sequence = 0L;
     protected long lastSecond = -1L;
 
-    /** Spring property */
     protected WorkerIdAssigner workerIdAssigner;
+
+    public DefaultUidGenerator() {
+        setEpochStr("2024-01-01");
+    }
 
     public void afterPropertiesSet() throws Exception {
         // initialize bits allocator
